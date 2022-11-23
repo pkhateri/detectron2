@@ -1,0 +1,17 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/pytorch:22.08-py3
+
+%post
+	export TZ='Europe/Zurich'
+        export DEBIAN_FRONTEND=noninteractive
+	
+	apt-get update
+	apt-get -y install python3-opencv git wget pip 
+	pip install 'git+https://github.com/facebookresearch/fvcore'
+	pip install --use-deprecated=legacy-resolver protobuf=3.20.1
+
+	cd /opt
+	git clone https://github.com/facebookresearch/detectron2 detectron2_repo
+	cd detectron2_repo
+	pip install .
+

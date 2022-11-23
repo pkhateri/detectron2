@@ -17,7 +17,6 @@ ENV PATH="/home/appuser/.local/bin:${PATH}"
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
 	python3 get-pip.py --user && \
 	rm get-pip.py
-
 # install dependencies
 # See https://pytorch.org/ for other options if you use a different version of CUDA
 RUN pip install --user tensorboard cmake onnx   # cmake from apt-get is too old
