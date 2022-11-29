@@ -3,6 +3,25 @@
 2- fine-tune a COCO-pretrained R50-FPN Mask R-CNN model on the balloon dataset
 '''
 
+# Some basic setup:
+# Setup detectron2 logger
+import detectron2
+from detectron2.utils.logger import setup_logger
+setup_logger()
+
+# import some common libraries
+import numpy as np
+import os, json, cv2, random
+
+# import some common detectron2 utilities
+from detectron2 import model_zoo
+from detectron2.engine import DefaultPredictor
+from detectron2.config import get_cfg
+from detectron2.utils.visualizer import Visualizer
+from detectron2.data import MetadataCatalog, DatasetCatalog
+
+
+
 # data preparation
 from detectron2.structures import BoxMode
 
@@ -44,8 +63,9 @@ def get_balloon_dicts(img_dir):
         dataset_dicts.append(record)
     return dataset_dicts
 
+dir = "/projects/parisa/data/balloon/"
 for d in ["train", "val"]:
-    DatasetCatalog.register("balloon_" + d, lambda d=d: get_balloon_dicts("balloon/" + d))
+    DatasetCatalog.register("balloon_" + d, lambda d=d: get_balloon_dicts(dir + d))
     MetadataCatalog.get("balloon_" + d).set(thing_classes=["balloon"])
 balloon_metadata = MetadataCatalog.get("balloon_train")
 
