@@ -92,8 +92,13 @@ sudo docker run --gpus all -it   --shm-size=8gb --env="DISPLAY" \
 
 
 # build and run singularity container from singularity def file from ngc pytorch container:
-
 nvcr.io/nvidia/pytorch:xx.xx-py3
 
-# run the singularity container on the WS:
-## 
+# run a simple training on existing dataset
+## download the baloon dataset
+wget https://github.com/matterport/Mask_RCNN/releases/download/v2.1/balloon_dataset.zip 
+## extract it to data folder
+unzip balloon_dataset
+## run data preparation, training and evaluation
+python3 datasets/prepare_ballon_dataset_train_simple_model_inference.py
+
