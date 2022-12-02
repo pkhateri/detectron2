@@ -1,6 +1,6 @@
 '''
-1- prepare ballon dataset 
-2- fine-tune a COCO-pretrained R50-FPN Mask R-CNN model on the balloon dataset
+1- prepare oct dataset 
+2- fine-tune a COCO-pretrained R50-FPN Mask R-CNN model on the oct dataset
 3- infere and evaluate
 '''
 
@@ -26,49 +26,33 @@ from detectron2.data import MetadataCatalog, DatasetCatalog
 # data preparation
 from detectron2.structures import BoxMode
 
-def get_balloon_dicts(img_dir):
-    json_file = os.path.join(img_dir, "via_region_data.json")
+def get_oct_dicts(img_dir):
+    json_file = os.path.join(img_dir, "x_boxes.json")
     with open(json_file) as f:
         imgs_anns = json.load(f)
-
+"file_name": "11007_OD_20140416_17h34m52s_y49_z496_x1024_oct-043.png", "x_box": [0.0, 0.0]}
     dataset_dicts = []
-    for idx, v in enumerate(imgs_anns.values()):
+    for row in imgs_anns.values():
         record = {}
         
-        filename = os.path.join(img_dir, v["filename"])
-        height, width = cv2.imread(filename).shape[:2]
-        
+        filename = os.path.join(img_dir, row["file_name"])
+        x_box = row["x_box"]
+        obj = {
+            "bbox": [x_box[0], 0, x_box[1], 0],
+            "bbox_mode": BoxMode.XYXY_ABS,
+            "category_id": 0,
+        }
+                
         record["file_name"] = filename
-        record["image_id"] = idx
-        record["height"] = height
-        record["width"] = width
-      
-        annos = v["regions"]
-        objs = []
-        for _, anno in annos.items():
-            assert not anno["region_attributes"]
-            anno = anno["shape_attributes"]
-            px = anno["all_points_x"]
-            py = anno["all_points_y"]
-            poly = [(x + 0.5, y + 0.5) for x, y in zip(px, py)]
-            poly = [p for x in poly for p in x]
-
-            obj = {
-                "bbox": [np.min(px), np.min(py), np.max(px), np.max(py)],
-                "bbox_mode": BoxMode.XYXY_ABS,
-                "segmentation": [poly],
-                "category_id": 0,
-            }
-            objs.append(obj)
-        record["annotations"] = objs
+        record["annotations"] = obj
         dataset_dicts.append(record)
     return dataset_dicts
 
-dir = "/projects/parisa/data/balloon/"
+dir = "/projects/parisa/data/test_detectron_oct/"
 for d in ["train", "val"]:
-    DatasetCatalog.register("balloon_" + d, lambda d=d: get_balloon_dicts(dir + d))
-    MetadataCatalog.get("balloon_" + d).set(thing_classes=["balloon"])
-balloon_metadata = MetadataCatalog.get("balloon_train")
+    DatasetCatalog.register("oct_" + d, lambda d=d: get_balloon_dicts(dir + d))
+    MetadataCatalog.get("oct_" + d).set(thing_classes=["damaged_retina"])
+balloon_metadata = MetadataCatalog.get("oct_train")
 
 
 # training
@@ -76,7 +60,7 @@ from detectron2.engine import DefaultTrainer
 
 cfg = get_cfg()
 cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")) #https://dl.fbaipublicfiles.com/detectron2/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl
-cfg.DATASETS.TRAIN = ("balloon_train",)
+cfg.DATASETS.TRAIN = ("oct_train",)
 cfg.DATASETS.TEST = ()
 cfg.DATALOADER.NUM_WORKERS = 2
 cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Let training initialize from model zoo
@@ -85,7 +69,7 @@ cfg.SOLVER.BASE_LR = 0.00025  # pick a good LR
 cfg.SOLVER.MAX_ITER = 300    # 300 iterations seems good enough for this toy dataset; you will need to train longer for a practical dataset
 cfg.SOLVER.STEPS = []        # do not decay learning rate
 cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128   # The "RoIHead batch size". 128 is faster, and good enough for this toy dataset (default: 512)
-cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # only has one class (ballon). (see https://detectron2.readthedocs.io/tutorials/datasets.html#update-the-config-for-new-datasets)
+cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # only has one class (damaged_retina). (see https://detectron2.readthedocs.io/tutorials/datasets.html#update-the-config-for-new-datasets)
 # NOTE: this config means the number of classes, but a few popular unofficial tutorials incorrect uses num_classes+1 here.
 
 os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
