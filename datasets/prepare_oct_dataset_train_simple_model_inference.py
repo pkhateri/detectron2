@@ -31,18 +31,23 @@ def get_oct_dicts(img_dir):
     with open(json_file) as f:
         imgs_anns = json.load(f)
     dataset_dicts = []
-    for row in imgs_anns:
+    for idx, value in enumerate(imgs_anns):
         record = {}
         
-        filename = os.path.join(img_dir, row["file_name"])
-        x_box = row["x_box"]
+        filename = os.path.join(img_dir, value["file_name"])
+        x_box = value["x_box"]
+        height = int(value["file_name"].split('_')[5][1:])
+        width = int(value["file_name"].split('_')[6][1:])
         obj = {
             "bbox": [x_box[0], 0, x_box[1], 0],
             "bbox_mode": BoxMode.XYXY_ABS,
             "category_id": 0,
         }
-                
+        
+        record["image_id"] = idx       
         record["file_name"] = filename
+        record["height"] = height
+        record["width"] = width
         record["annotations"] = [obj]
         dataset_dicts.append(record)
     return dataset_dicts
@@ -51,7 +56,7 @@ dir = "/projects/parisa/data/test_detectron_oct/"
 for d in ["train", "val"]:
     DatasetCatalog.register("oct_" + d, lambda d=d: get_oct_dicts(dir + d))
     MetadataCatalog.get("oct_" + d).set(thing_classes=["damaged_retina"])
-balloon_metadata = MetadataCatalog.get("oct_train")
+oct_metadata = MetadataCatalog.get("oct_train")
 
 
 # training
@@ -84,12 +89,12 @@ cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set a custom testing threshold
 predictor = DefaultPredictor(cfg)
 
 from detectron2.utils.visualizer import ColorMode
-dataset_dicts = get_balloon_dicts(dir+"val")
-for d in random.sample(dataset_dicts, 3):    
+dataset_dicts = get_oct_dicts(dir+"val")
+for d in random.sample(dataset_dicts, 10):    
     im = cv2.imread(d["file_name"])
     outputs = predictor(im)  # format is documented at https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
     v = Visualizer(im[:, :, ::-1],
-                   metadata=balloon_metadata, 
+                   metadata=oct_metadata, 
                    scale=0.5, 
                    instance_mode=ColorMode.IMAGE_BW   # remove the colors of unsegmented pixels. This option is only available for segmentation models
     )
@@ -103,7 +108,7 @@ for d in random.sample(dataset_dicts, 3):
     
 from detectron2.evaluation import COCOEvaluator, inference_on_dataset
 from detectron2.data import build_detection_test_loader
-evaluator = COCOEvaluator("balloon_val", output_dir="./output")
-val_loader = build_detection_test_loader(cfg, "balloon_val")
+evaluator = COCOEvaluator("oct_val", output_dir="./output")
+val_loader = build_detection_test_loader(cfg, "oct_val")
 print(inference_on_dataset(predictor.model, val_loader, evaluator))
 # another equivalent way to evaluate the model is to use `trainer.test`
