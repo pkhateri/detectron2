@@ -30,9 +30,8 @@ def get_oct_dicts(img_dir):
     json_file = os.path.join(img_dir, "x_boxes.json")
     with open(json_file) as f:
         imgs_anns = json.load(f)
-"file_name": "11007_OD_20140416_17h34m52s_y49_z496_x1024_oct-043.png", "x_box": [0.0, 0.0]}
     dataset_dicts = []
-    for row in imgs_anns.values():
+    for row in imgs_anns:
         record = {}
         
         filename = os.path.join(img_dir, row["file_name"])
@@ -44,13 +43,13 @@ def get_oct_dicts(img_dir):
         }
                 
         record["file_name"] = filename
-        record["annotations"] = obj
+        record["annotations"] = [obj]
         dataset_dicts.append(record)
     return dataset_dicts
 
 dir = "/projects/parisa/data/test_detectron_oct/"
 for d in ["train", "val"]:
-    DatasetCatalog.register("oct_" + d, lambda d=d: get_balloon_dicts(dir + d))
+    DatasetCatalog.register("oct_" + d, lambda d=d: get_oct_dicts(dir + d))
     MetadataCatalog.get("oct_" + d).set(thing_classes=["damaged_retina"])
 balloon_metadata = MetadataCatalog.get("oct_train")
 
