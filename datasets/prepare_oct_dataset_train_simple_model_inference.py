@@ -93,21 +93,29 @@ predictor = DefaultPredictor(cfg)
 
 from detectron2.utils.visualizer import ColorMode
 dataset_dicts = get_oct_dicts(dir+"val")
-for d in random.sample(dataset_dicts, 10):    
+for d in random.sample(dataset_dicts, 20):    
     im = cv2.imread(d["file_name"])
     outputs = predictor(im)  # format is documented at https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
-    v = Visualizer(im[:, :, ::-1],
+    from detectron2.data import detection_utils as utils
+    groundtruth_instances = utils.annotations_to_instances(d['annotations'], (d['height'],d['height']))
+    v_pred = Visualizer(im[:, :, ::-1],
                    metadata=oct_metadata, 
-                   scale=0.5#, 
+                   scale=2#, 
                    #instance_mode=ColorMode.IMAGE_BW   # This option is only available for segmentation models
     )
-    out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+    v_groundtruth = Visualizer(im[:, :, ::-1],
+                   metadata=oct_metadata,
+                   scale=2#, 
+                   #instance_mode=ColorMode.IMAGE_BW   # This option is only available for segmentation models
+    )
+    out_pred = v_pred.draw_instance_predictions(outputs["instances"].to("cpu"))
+    out_groundtruth = v_groundtruth.draw_instance_groundtruths(groundtruth_instances.to("cpu"))
     import matplotlib.pyplot as plt
     import os
-    #cv2.imshow(out.get_image()[:, :, ::-1])
-    plt.figure()
-    plt.imshow(out.get_image()[:, :, ::-1])
-    plt.savefig("./output/"+os.path.basename(d["file_name"])) 
+    figure, axis = plt.subplots(1, 2, figsize=(20, 10))
+    axis[0].imshow(out_pred.get_image()[:, :, ::-1])
+    axis[1].imshow(out_groundtruth.get_image()[:, :, ::-1])
+    plt.savefig("./output/"+os.path.basename(d["file_name"]))     
     
 from detectron2.evaluation import COCOEvaluator, inference_on_dataset
 from detectron2.data import build_detection_test_loader
