@@ -1,4 +1,4 @@
-Bootstrap: library
+Bootstrap: docker
 From: ubuntu:20.04
 
 %post
@@ -6,7 +6,7 @@ From: ubuntu:20.04
 	export DEBIAN_FRONTEND=noninteractive
 
 	apt-get update
-	apt-get -y install python3.8-dev pip wget git
+	apt-get -y install python3.8-dev pip wget git vim
 	pip install opencv-python-headless
 	
 	pip install tensorboard
@@ -14,7 +14,7 @@ From: ubuntu:20.04
 	pip install 'git+https://github.com/facebookresearch/fvcore'
 
 	cd /opt
-	git clone https://github.com/facebookresearch/detectron2 detectron2_repo
+	git clone https://github.com/pkhateri/detectron2.git detectron2_repo
 	cd detectron2_repo
 	pip install .
 
