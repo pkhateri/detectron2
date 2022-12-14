@@ -26,24 +26,28 @@ from detectron2.data import MetadataCatalog, DatasetCatalog
 # data preparation
 from detectron2.structures import BoxMode
 
+#{"file_name": "11006_OD_20140307_21h30m28s_y49_z496_x1024_oct-026.png", "boxes": {"0": {"x_box": [234, 740], "y_box": [99, 170]}, "1": {"x_box": [777, 806], "y_box": [90, 168]}}},
 def get_oct_dicts(img_dir):
     json_file = os.path.join(img_dir, "x_boxes.json")
     with open(json_file) as f:
         imgs_anns = json.load(f)
     dataset_dicts = []
-    for idx, value in enumerate(imgs_anns):
-        record = {}
-        obj = {}
-        
+    for idx, value in enumerate(imgs_anns):        
         filename = os.path.join(img_dir, value["file_name"])
-        x_box = value["x_box"]
         height = int(value["file_name"].split('_')[5][1:])
         width = int(value["file_name"].split('_')[6][1:])
-        obj = {
-            "bbox": [x_box[0], 0, x_box[1], height], # for now we consider no limit for the y_box
-            "bbox_mode": BoxMode.XYXY_ABS,
-            "category_id": 0,
-         }
+        
+        record = {}
+        objs = []
+        for _, box in value["boxes"].items():    
+            x_box = box["x_box"]
+            y_box = box["y_box"]
+            obj = {
+                "bbox": [x_box[0], y_box[0], x_box[1], y_box[1]],
+                "bbox_mode": BoxMode.XYXY_ABS,
+                "category_id": 0,
+            }
+            objs.append(obj)
         
         record["file_name"] = filename
         record["image_id"] = idx       
@@ -109,7 +113,7 @@ for d in random.sample(dataset_dicts, 20):
                    #instance_mode=ColorMode.IMAGE_BW   # This option is only available for segmentation models
     )
     out_pred = v_pred.draw_instance_predictions(outputs["instances"].to("cpu"))
-    out_groundtruth = v_groundtruth.draw_instance_groundtruths(groundtruth_instances.to("cpu"))
+    out_groundtruth = v_groundtruth.draw_dataset_dict(d)
     import matplotlib.pyplot as plt
     import os
     figure, axis = plt.subplots(1, 2, figsize=(20, 10))
