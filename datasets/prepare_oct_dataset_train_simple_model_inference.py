@@ -53,7 +53,7 @@ def get_oct_dicts(img_dir):
         record["image_id"] = idx       
         record["height"] = height
         record["width"] = width
-        record["annotations"] = [obj]
+        record["annotations"] = objs
         if x_box[0]==x_box[1]==0:
             record["annotations"] = []
         dataset_dicts.append(record)
@@ -71,23 +71,27 @@ from detectron2.engine import DefaultTrainer
 
 cfg = get_cfg()
 cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
+cfg.INPUT.FORMAT = "L"
 cfg.DATASETS.TRAIN = ("oct_train",)
 cfg.DATASETS.TEST = ()
 cfg.DATALOADER.NUM_WORKERS = 2
 cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml")  # Let training initialize from model zoo
 cfg.SOLVER.IMS_PER_BATCH = 2  # This is the real "batch size" commonly known to deep learning people
 cfg.SOLVER.BASE_LR = 0.00025  # pick a good LR
-cfg.SOLVER.MAX_ITER = 300    # 300 iterations seems good enough for this toy dataset; you will need to train longer for a practical dataset
+cfg.SOLVER.MAX_ITER = 2000    # 300 iterations seems good enough for this toy dataset; you will need to train longer for a practical dataset
 cfg.SOLVER.STEPS = []        # do not decay learning rate
 cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128   # The "RoIHead batch size". 128 is faster, and good enough for this toy dataset (default: 512)
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # only has one class (damaged_retina). (see https://detectron2.readthedocs.io/tutorials/datasets.html#update-the-config-for-new-datasets)
 # NOTE: this config means the number of classes, but a few popular unofficial tutorials incorrect uses num_classes+1 here.
 cfg.DATALOADER.FILTER_EMPTY_ANNOTATIONS = False # to use those data with empty annotation
+#cfg.INPUT.FORMAT = "RGB" # input images are black and white
+cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.05
 
 os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 trainer = DefaultTrainer(cfg) 
 trainer.resume_or_load(resume=False)
 trainer.train()
+
 # inference and evaluation
 # Inference should use the config with parameters that are used in training
 # cfg now already contains everything we've set previously. We changed it a little bit for inference:
@@ -97,19 +101,19 @@ predictor = DefaultPredictor(cfg)
 
 from detectron2.utils.visualizer import ColorMode
 dataset_dicts = get_oct_dicts(dir+"val")
-for d in random.sample(dataset_dicts, 20):    
+for d in random.sample(dataset_dicts, 50):    
     im = cv2.imread(d["file_name"])
     outputs = predictor(im)  # format is documented at https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
     from detectron2.data import detection_utils as utils
     groundtruth_instances = utils.annotations_to_instances(d['annotations'], (d['height'],d['height']))
     v_pred = Visualizer(im[:, :, ::-1],
                    metadata=oct_metadata, 
-                   scale=2#, 
+                   scale=1#, 
                    #instance_mode=ColorMode.IMAGE_BW   # This option is only available for segmentation models
     )
     v_groundtruth = Visualizer(im[:, :, ::-1],
                    metadata=oct_metadata,
-                   scale=2#, 
+                   scale=1#, 
                    #instance_mode=ColorMode.IMAGE_BW   # This option is only available for segmentation models
     )
     out_pred = v_pred.draw_instance_predictions(outputs["instances"].to("cpu"))
@@ -119,6 +123,7 @@ for d in random.sample(dataset_dicts, 20):
     figure, axis = plt.subplots(1, 2, figsize=(20, 10))
     axis[0].imshow(out_pred.get_image()[:, :, ::-1])
     axis[1].imshow(out_groundtruth.get_image()[:, :, ::-1])
+    plt.tight_layout()
     plt.savefig("./output/"+os.path.basename(d["file_name"]))     
     
 from detectron2.evaluation import COCOEvaluator, inference_on_dataset
