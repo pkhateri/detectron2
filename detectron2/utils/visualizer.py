@@ -425,8 +425,8 @@ class Visualizer:
 
         self.overlay_instances(
             masks=masks,
-            boxes=boxes,
-            labels=labels,
+            #boxes=boxes,
+            #labels=labels,
             keypoints=keypoints,
             assigned_colors=colors,
             alpha=alpha,
@@ -579,7 +579,11 @@ class Visualizer:
                 is_crowd=[x.get("iscrowd", 0) for x in annos],
             )
             self.overlay_instances(
-                labels=labels, boxes=boxes, masks=masks, keypoints=keypts, assigned_colors=colors
+                #labels=labels,
+                #boxes=boxes,
+                masks=masks,
+                keypoints=keypts,
+                assigned_colors=colors
             )
 
         sem_seg = dic.get("sem_seg", None)
