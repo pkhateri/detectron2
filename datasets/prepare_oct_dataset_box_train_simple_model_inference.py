@@ -33,11 +33,17 @@ def get_oct_dicts(img_dir):
         imgs_anns = json.load(f)
     dataset_dicts = []
     for idx, value in enumerate(imgs_anns):        
+        record = {}
+
         filename = os.path.join(img_dir, value["file_name"])
         height = int(value["file_name"].split('_')[5][1:])
         width = int(value["file_name"].split('_')[6][1:])
         
-        record = {}
+        record["file_name"] = filename
+        record["image_id"] = idx
+        record["height"] = height
+        record["width"] = width
+
         objs = []
         for _, box in value["boxes"].items():    
             x_box = box["x_box"]
@@ -48,18 +54,13 @@ def get_oct_dicts(img_dir):
                 "category_id": 0,
             }
             objs.append(obj)
-        
-        record["file_name"] = filename
-        record["image_id"] = idx       
-        record["height"] = height
-        record["width"] = width
         record["annotations"] = objs
         if x_box[0]==x_box[1]==0:
             record["annotations"] = []
         dataset_dicts.append(record)
     return dataset_dicts
 
-dir = "/projects/parisa/data/test_detectron_oct/"
+dir = "/projects/parisa/data/test_detectron_oct_box/"
 for d in ["train", "val"]:
     DatasetCatalog.register("oct_" + d, lambda d=d: get_oct_dicts(dir + d))
     MetadataCatalog.get("oct_" + d).set(thing_classes=["damaged_retina"])
