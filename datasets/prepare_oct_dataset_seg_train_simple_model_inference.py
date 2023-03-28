@@ -141,7 +141,7 @@ cfg.DATALOADER.NUM_WORKERS = 2
 cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Let training initialize from model zoo
 cfg.SOLVER.IMS_PER_BATCH = 2  # This is the real "batch size" commonly known to deep learning people
 cfg.SOLVER.BASE_LR = 0.00025  # pick a good LR
-cfg.SOLVER.MAX_ITER = 200    # 300 iterations seems good enough for this toy dataset; you will need to train longer for a practical dataset
+cfg.SOLVER.MAX_ITER = 2500    # 300 iterations seems good enough for this toy dataset; you will need to train longer for a practical dataset
 cfg.SOLVER.STEPS = []        # do not decay learning rate
 cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128   # The "RoIHead batch size". 128 is faster, and good enough for this toy dataset (default: 512)
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 5  # has five classes, one for each layer. (see https://detectron2.readthedocs.io/tutorials/datasets.html#update-the-config-for-new-datasets)
@@ -149,22 +149,24 @@ cfg.MODEL.ROI_HEADS.NUM_CLASSES = 5  # has five classes, one for each layer. (se
 #cfg.DATALOADER.FILTER_EMPTY_ANNOTATIONS = False # to use those data with empty annotation
 cfg.INPUT.FORMAT = "L" # input images are black and white
 cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.05
+cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[64, 128 , 256, 512]]
+cfg.MODEL.ANCHOR_GENERATOR.ASPECT_RATIOS = [[0.002, 0.01, 0.02, 0.05]]
 
 os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 trainer = DefaultTrainer(cfg) 
 trainer.resume_or_load(resume=False)
-#trainer.train()
+trainer.train()
 
 # inference and evaluation
 # Inference should use the config with parameters that are used in training
 # cfg now already contains everything we've set previously. We changed it a little bit for inference:
 cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth")  # path to the model we just trained
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.05   # set a custom testing threshold
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.0001   # set a custom testing threshold
 predictor = DefaultPredictor(cfg)
 
 from detectron2.utils.visualizer import ColorMode
 dataset_dicts = get_oct_dicts(img_dir, xml_dir + "val")
-for d in random.sample(dataset_dicts, 3):    
+for d in random.sample(dataset_dicts, 5):    
     im = cv2.imread(d["file_name"])
     outputs = predictor(im)  # format is documented at https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
     from detectron2.data import detection_utils as utils
@@ -181,14 +183,8 @@ for d in random.sample(dataset_dicts, 3):
     )
     out_pred = v_pred.draw_instance_predictions(outputs["instances"].to("cpu"))
     out_groundtruth = v_groundtruth.draw_dataset_dict(d)
-    #out_pred = v_pred.draw_sem_seg(outputs["instances"].to("cpu"),alpha=0.5)
-    import matplotlib.pyplot as plt
-    import os
-    plt.figure(figsize=(25,15))
-    plt.tight_layout()
-    plt.imshow(out_groundtruth.get_image()[:, :, ::-1])
-    plt.savefig("./output/gt_"+os.path.basename(d["file_name"]))
 
+    import matplotlib.pyplot as plt
     figure, axis = plt.subplots(1, 2, figsize=(20, 10))
     axis[0].imshow(out_pred.get_image()[:, :, ::-1])
     axis[1].imshow(out_groundtruth.get_image()[:, :, ::-1])
