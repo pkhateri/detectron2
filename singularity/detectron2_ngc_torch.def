@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/pytorch:21.06-py3
+
+%post
+	python3 --version
+	export TZ='Europe/Zurich'
+        export DEBIAN_FRONTEND=noninteractive
+	
+	apt-get update
+	apt-get -y install pip wget git vim  python3-venv
+
+	# create and activate virtual environment
+	python3 -m venv /opt/myenv
+	. /opt/myenv/bin/activate # use . instead of source command in container
+
+	# install packages
+        pip install tensorboard
+        pip install opencv-python-headless
+	pip install 'git+https://github.com/facebookresearch/fvcore'	
+        pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113
+
+	cd /opt
+	git clone https://github.com/pkhateri/detectron2.git detectron2_repo
+	cd detectron2_repo
+        git checkout iob
+	pip install .
