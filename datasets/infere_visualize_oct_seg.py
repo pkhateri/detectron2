@@ -2,6 +2,9 @@
 1- read oct data 
 2- load a pretrained model
 3- infere and evaluate
+
+it loads the saved model in file model_final.pth in the default output_dir which is "output"
+and will save the new prediction in the same output dir
 '''
 
 # Some basic setup:
@@ -22,7 +25,6 @@ from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog, DatasetCatalog
 
 
-
 # data preparation
 from detectron2.structures import BoxMode
 
@@ -30,6 +32,7 @@ from detectron2.structures import BoxMode
 image data files are not copied here.
 only xml files are copied and divided to train/val catgories
 '''
+#TODO call this from a class
 def get_oct_dicts(img_dir, xml_dir):
     import sys, glob, lxml
     import xml.etree.ElementTree as ET
@@ -123,6 +126,8 @@ def get_oct_dicts(img_dir, xml_dir):
         dataset_dicts.append(record)
     return dataset_dicts
 
+
+# load the images
 img_dir = "/projects/progstar/all_oct_imgs_progstar02/OCT_imgs_files/heyex_export_raw/renamed_vol/y49/png_dirs/" 
 xml_dir = "/projects/parisa/data/test_detectron_oct_seg/"
 for d in ["train", "val"]:
@@ -138,17 +143,7 @@ from detectron2.checkpoint import DetectionCheckpointer
 
 cfg = get_cfg()
 cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-cfg.DATASETS.TRAIN = ("oct_train",)
-cfg.DATASETS.TEST = ()
-#cfg.DATALOADER.NUM_WORKERS = 2
-#cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Let training initialize from model zoo
-#cfg.SOLVER.IMS_PER_BATCH = 2  # This is the real "batch size" commonly known to deep learning people
-#cfg.SOLVER.BASE_LR = 0.00025  # pick a good LR
-#cfg.SOLVER.MAX_ITER = 2500    # 300 iterations seems good enough for this toy dataset; you will need to train longer for a practical dataset
-#cfg.SOLVER.STEPS = []        # do not decay learning rate
-#cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128   # The "RoIHead batch size". 128 is faster, and good enough for this toy dataset (default: 512)
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 5  # has five classes, one for each layer. (see https://detectron2.readthedocs.io/tutorials/datasets.html#update-the-config-for-new-datasets)
-# NOTE: this config means the number of classes, but a few popular unofficial tutorials incorrect uses num_classes+1 here.
 #cfg.DATALOADER.FILTER_EMPTY_ANNOTATIONS = False # to use those data with empty annotation
 cfg.INPUT.FORMAT = "L" # input images are black and white
 cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.05
