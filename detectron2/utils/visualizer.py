@@ -536,7 +536,6 @@ class Visualizer:
     draw_panoptic_seg_predictions = draw_panoptic_seg  # backward compatibility
 
     def draw_dataset_dict(self, dic):
-        print("\n\n\n\n\n ********\n\n\n\n\n")
         """
         Draw annotations/segmentaions in Detectron2 Dataset format.
 
