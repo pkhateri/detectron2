@@ -114,4 +114,19 @@ check [nvcr webpage](nvcr.io/nvidia/pytorch:xx.xx-py3)
 `unzip balloon_dataset`
 ## run data preparation, training and evaluation
 `python3 datasets/prepare_ballon_dataset_train_simple_model_inference.py`
+-------------------------------------------------
+
+# use for box annotation
+1. you need to have json files for train and val data. create them from box_annotation excel files using this code. it chooses randomly from the files for train (80%) and val (20%).
+```
+python dataset/convert_box_annot_csv_to_json.py
+```
+2. run the singularity container
+```
+singularity run --nv -B /projects docker/detectron2.sif
+```
+3. run the training
+```
+python3 datasets/prepare_oct_dataset_box_train_simple_model_inference.py
+```
 
