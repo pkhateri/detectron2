@@ -135,6 +135,7 @@ from detectron2.engine import DefaultTrainer
 
 cfg = get_cfg()
 cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
+cfg.INPUT.FORMAT = "L" # input images are black and white 
 cfg.DATASETS.TRAIN = ("oct_train",)
 cfg.DATASETS.TEST = ()
 cfg.DATALOADER.NUM_WORKERS = 2
@@ -147,8 +148,7 @@ cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128   # The "RoIHead batch size". 128
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 5  # has five classes, one for each layer. (see https://detectron2.readthedocs.io/tutorials/datasets.html#update-the-config-for-new-datasets)
 # NOTE: this config means the number of classes, but a few popular unofficial tutorials incorrect uses num_classes+1 here.
 #cfg.DATALOADER.FILTER_EMPTY_ANNOTATIONS = False # to use those data with empty annotation
-cfg.INPUT.FORMAT = "L" # input images are black and white
-cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.05
+cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.001  #suppress boxes with overlap (IoU) >= this threshold
 cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[64, 128 , 256, 512]]
 cfg.MODEL.ANCHOR_GENERATOR.ASPECT_RATIOS = [[0.002, 0.01, 0.02, 0.05]]
 
@@ -161,7 +161,7 @@ trainer.train()
 # Inference should use the config with parameters that are used in training
 # cfg now already contains everything we've set previously. We changed it a little bit for inference:
 cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth")  # path to the model we just trained
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.0001   # set a custom testing threshold
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.0001   # threshold to pass to be detected, the lower more number of objects are detected but the inference takes more time too
 predictor = DefaultPredictor(cfg)
 
 from detectron2.utils.visualizer import ColorMode
