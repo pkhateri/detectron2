@@ -129,4 +129,11 @@ singularity run --nv -B /projects docker/detectron2.sif
 ```
 python3 datasets/prepare_oct_dataset_box_train_simple_model_inference.py
 ```
-
+4. see loss plots using tensorboard:
+```
+tensorboard --logdir output_nmsthresh05/
+```
+	- specify the port if remote on miac:
+```
+tensorboard --logdir output_nmsthresh05/ --port 6006
+```
