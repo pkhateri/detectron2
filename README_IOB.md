@@ -51,7 +51,7 @@ mkdir output
 python3 demo/demo.py --config-file configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --input input.jpg --output outputs/ --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl
 ### you get an image in the outputs folder with the boxes detecting the objects in the image
 
-# build docker image on my local computer 
+# build docker image on my local computer
 not enough space :(
 
 # build and run docker container on VM google cloud:
@@ -135,5 +135,5 @@ tensorboard --logdir output_nmsthresh05/
 ```
 	- specify the port if remote on miac:
 ```
-tensorboard --logdir output_nmsthresh05/ --port 6006
+tensorboard --logdir output/ --port 6006
 ```
