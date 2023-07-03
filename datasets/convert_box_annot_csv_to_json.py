@@ -20,6 +20,8 @@ def read_csv_file(csv_filename, n):
         fields = next(csv_reader) # The line will get the first row of the csv file (Header row)
         c+=1
         for row in csv_reader:
+            if row[0] == "":
+                continue
             if c<n: #read the first n line only
                 rows.append(row)
                 c+=1
@@ -33,9 +35,9 @@ def shuffle_divide_dataset(n_total, k):
     n_train = round(k*n_total/100)
     n_val = round((n_total - n_train)/2)
     n_test = n_total - n_train - n_val
-    train_idxs = random.sample(range(n_total),num_train)
+    train_idxs = random.sample(range(n_total),n_train)
     train_idxs.sort()
-    val_idxs = random.sample(list(set(range(n_total)) - set(train_idxs)), num_val)
+    val_idxs = random.sample(list(set(range(n_total)) - set(train_idxs)), n_val)
     val_idxs.sort()
     test_idxs = list(set(range(n_total)) - set(train_idxs) - set(val_idxs))
     test_idxs.sort()
@@ -75,8 +77,8 @@ def write_json_files(rows, k, json_train_filename, json_val_filename, json_test_
             json.dump(slice_dict, outfile_val)
             outfile_val.write(",\n")
         else:
-            json.dump(slice_dict, outfile_val)
-            outfile_val.write(",\n")
+            json.dump(slice_dict, outfile_test)
+            outfile_test.write(",\n")
 
     outfile_train.close()
     outfile_val.close()
@@ -107,26 +109,26 @@ def main(argv):
     opts, args = getopt.getopt(argv,"hc:d:j:n:k:",["csv_file=","json_dir=","json_prefix=", "num_rows=", "train_percentage="])
     for opt, arg in opts:
         if opt == '-h':
-            print ('python convert_box_annot_csv_to_json.py -c <csv_filename> -d <json_dir> -j <json_prefix> -n <number_of_rows> k <train_percentage>')
+            print('python convert_box_annot_csv_to_json.py -c <csv_filename> -d <json_dir> -j <json_prefix> -n <number_of_rows> -k <train_percentage>')
             sys.exit()
         elif opt in ("-c", "--csv_file"):
             csv_filename = arg
         elif opt in ("-d", "--json_dir"):
             json_dir = arg
         elif opt in ("-j", "--json_prefix"):
-            json_dir = arg
+            json_prefix = arg
         elif opt in ("-n", "--num_rows"):
             n = int(arg)
         elif opt in ("-k", "--train_percentage"):
-            n = int(arg)
+            k = int(arg)
 
     if len(argv) < 8:
         sys.exit("ERROR: all or part of input arguments are not provided!\n",
-                 "python convert_box_annot_csv_to_json.py -c <csv_filename> -d <json_dir> -j <json_prefix> -n <number_of_rows> k <train_percentage>")
+                 "python convert_box_annot_csv_to_json.py -c <csv_filename> -d <json_dir> -j <json_prefix> -n <number_of_rows> -k <train_percentage>")
 
     if not os.path.exists(csv_filename):
         sys.exit("ERROR: csv_filename {} does not exist!".format(csv_filename))
-    if not os.path.exists(png_dir):
+    if not os.path.exists(json_dir):
         sys.exit("ERROR: json_dir {} does not exist!".format(json_dir))
 
 
@@ -139,3 +141,6 @@ def main(argv):
     json_val_filename = os.path.join(json_dir, json_prefix+"_val.json")
     json_test_filename = os.path.join(json_dir, json_prefix+"_test.json")
     write_json_files(rows, k, json_train_filename, json_val_filename, json_test_filename)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
