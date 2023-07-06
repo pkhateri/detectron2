@@ -1,0 +1,39 @@
+# Parameters for detectron2.py
+# python detectron2.py --config detectron2.yaml
+
+
+# network parameters
+network_config: "COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"
+pretrained_weights: "COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"
+
+# training-parameters
+input_img_format: "L" # or BGR
+classes: ['damaged']
+batch_size: 2 # This is the real "batch size" commonly known to deep learning people
+roi_heads_batch_size_per_img: 128 # The "RoIHead batch size". 128 is faster, and good enough for this toy dataset (default: 512)
+base_lr: 0.0005
+lr_decay_steps: [] # the steps in num_iter where learning rate decays by a factor of 0.1
+num_workers: 2
+filter_empty_annotations: "False" #to include/exclude empty annotations in training
+train_iterations: 15000
+eval_period: 20
+# transfer_learning_on_previous_models: True
+# checkpoint_period: -1
+# weight_decay: 0.0001
+# learning_policy: 'steps_with_decay'
+# gamma: 0.1
+# cuda_visible_devices: '0'
+
+
+# evaluation-parameters
+confidence_threshold: 0.5
+nms_threshold: 0.05  #suppress boxes with overlap (IoU) >= this threshold
+
+output_dir: 'output_lossevalhook'
+train_dir: "./datasets/train"
+val_dir: "./datasets/val"
+test_dir: "./datasets/test"
+json_dir:
+
+dataset_dicts = get_oct_dicts(json_dir + "single_box_annotation_val.json", data_dir)
+for d in random.sample(dataset_dicts, 40):
