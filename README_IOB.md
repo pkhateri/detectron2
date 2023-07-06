@@ -117,9 +117,19 @@ check [nvcr webpage](nvcr.io/nvidia/pytorch:xx.xx-py3)
 -------------------------------------------------
 
 # use for box annotation
-1. you need to have json files for train and val data. create them from box_annotation excel files using this code. it chooses randomly from the files for train (80%) and val (20%).
+1. you need to have json files for train and val data. create them from box_annotation excel files using this code. it chooses randomly from the files for train (k%) and val (n-k%)/2 and test (n-k%)/2.
 ```
-python dataset/convert_box_annot_csv_to_json.py
+python convert_box_annot_csv_to_json.py -c <csv_filename> -d <json_dir> -j <json_prefix> -n <number_of_rows> -k <train_percentage>
+
+example for multiple boxes:
+csv_filename = '/projects/parisa/data/progstar/box_annot/box_annotation_final.csv'
+json_dir = '/projects/parisa/data/progstar/box_annot/'
+json_prefix = 'box_annotation'
+example for single box:
+csv_filename = '/usr/local/scratch/parisa/data/test_detectron/single_box_annotation_final.csv'
+json_dir = '/usr/local/scratch/parisa/data/test_detectron/'
+json_prefix = 'single_box_annotation'
+
 ```
 2. run the singularity container
 ```
@@ -131,7 +141,7 @@ python3 datasets/prepare_oct_dataset_box_train_simple_model_inference.py
 ```
 4. see loss plots using tensorboard:
 ```
-tensorboard --logdir output_nmsthresh05/
+tensorboard --logdir output/
 ```
 	- specify the port if remote on miac:
 ```
